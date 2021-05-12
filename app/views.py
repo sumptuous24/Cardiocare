@@ -7,9 +7,8 @@ from django.template.loader import get_template
 from xhtml2pdf import pisa
 from .models import Test
 from django.contrib.auth.decorators import login_required
-from sklearn.preprocessing import StandardScaler
 from .forms import TestForm
-from .utility import join_mail, test_report
+from .utility import test_report
 import datetime
 
 @login_required()
@@ -22,6 +21,10 @@ def landing_view(request):
     return render(request, 'app/home.html')
 
 def result(request):
+    if not request.user.is_authenticated:
+        messages.info(request, 'Login to take a test')
+        return redirect('login')
+
     if request.method == 'POST':
         ans = 'High' if get_result(request) == 1 else 'Low'
         form = TestForm(request.POST)
@@ -42,7 +45,7 @@ def result(request):
 
 def get_result(request):
     test_report(request)
-    cls = pk.load(open('app/templates/app/KNN_', 'rb'))
+    cls = pk.load(open('app/templates/app/DTC_', 'rb'))
     Scalar = pk.load(open('app/templates/app/Scalar_', 'rb'))
     column_name = ['age', 'sex', 'cp', 'trestbps', 'chol', 'restecg',
                    'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal']
@@ -79,7 +82,7 @@ def history(request):
 
 def render_pdf_view(request, pk):
     # date1 = datetime.datetime(date)
-    # print(pk)
+    print(pk)
     hist = get_readable_data(Test.objects.get(pk=pk))
     patient = request.user
 
