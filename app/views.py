@@ -11,14 +11,29 @@ from .forms import TestForm
 from .utility import test_report
 import datetime
 
+IP_SET = set()
+
 @login_required()
 def test(request):
     form = TestForm(instance=request.user)
     context = {'form': form}
     return render(request, 'app/test1.html', context)
 
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+
 def landing_view(request):
-    return render(request, 'app/home.html')
+    ip = get_client_ip(request)
+    if ip not in IP_SET:
+        IP_SET.add(ip)
+        messages.info(request, 'On the behalf of Cardiocare, wishing you and your family a very Happy Eid Mubarak')
+    print(ip)
+    return render(request, 'app/home.html', {'ip': ip})
 
 def result(request):
     if not request.user.is_authenticated:
